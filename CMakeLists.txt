@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(panda_srl)
+project(rwr-ros2-examples)
 
 ## Use C++17
 set(CMAKE_CXX_STANDARD 17)
@@ -11,13 +11,13 @@ add_definitions(-Wall)
 
 
 find_package(ament_cmake REQUIRED)
+find_package(rclpy REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
 ## Find system libraries
 find_package(tf2_eigen REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
 
 
 ###########
@@ -37,7 +37,6 @@ add_executable(joy_to_twist
   src/joy_to_twist.cpp
 )
 ament_target_dependencies(joy_to_twist rclcpp std_msgs sensor_msgs tf2_eigen)
-rosidl_target_interfaces(joy_to_twist ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 #############
 ## Install ##
@@ -49,16 +48,17 @@ install(TARGETS
   DESTINATION lib/${PROJECT_NAME}
 )
 
+install(PROGRAMS
+    scripts/franka_pose_cmd_publisher.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 # install the launch file
 install(DIRECTORY
   launch
   DESTINATION share/${PROJECT_NAME}
 )
 
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
-endif()
 
 ament_package()
 

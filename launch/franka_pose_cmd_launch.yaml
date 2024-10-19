@@ -1,0 +1,6 @@
+launch:
+  - node:
+      pkg: "rwr-ros2-examples"
+      exec: franka_pose_cmd_publisher.py
+      name: franka_pose_cmd_publisher
+      output: screen

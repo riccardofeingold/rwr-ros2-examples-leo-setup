@@ -27,6 +27,6 @@ launch:
         to: "$(var joy_topic)"
 
 - node:
-    pkg: "panda_srl"
+    pkg: "rwr-ros2-examples"
     exec: "joy_to_twist"
     name: "joy_to_twist_node"

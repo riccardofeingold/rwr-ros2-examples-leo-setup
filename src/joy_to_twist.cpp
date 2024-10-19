@@ -18,7 +18,7 @@ class JoyToTwistNode : public rclcpp::Node {
   JoyToTwistNode()
       : Node("joy_to_twist"), debounce_counter_(0), enabled_(false) {
     // Initialize parameters
-    twist_topic_ = this->declare_parameter<std::string>("twist_topic", "/franka_twist");
+    twist_topic_ = this->declare_parameter<std::string>("twist_topic", "/franka_twist_cmd");
     joy_topic_ = this->declare_parameter<std::string>("joy_topic", "/joy");
 
     // Create publishers
@@ -86,7 +86,7 @@ class JoyToTwistNode : public rclcpp::Node {
       geometry_msgs::msg::Twist twist_msg;
       twist_msg.linear.x = scaling * analogRight_y;
       twist_msg.linear.y = scaling * analogRight_x;
-      twist_msg.linear.z = scaling * dPad_y;
+      twist_msg.linear.z = - scaling * dPad_y;
       twist_msg.angular.x = -scaling * analogLeft_x;
       twist_msg.angular.y = scaling * analogLeft_y;
       twist_msg.angular.z = scaling * dPad_x;
