@@ -20,23 +20,24 @@ class PoseCommandPublisher(Node):
     def run(self):
         # Motion sequence: list of (motion_name, position_offset)
         motions = [
-            ('forward', [0.2, 0.0, 0.0], 2),
-            ('backward', [-0.2, 0.0, 0.0], 5),
-            ('left', [0.0, 0.2, 0.0], 10),
-            ('right', [0.0, -0.2, 0.0], 20),
-            ('up', [0.0, 0.0, 0.2], 50),
-            ('down', [0.0, 0.0, -0.2], 100),
+            ('forward', [0.2, 0.0, 0.0], 0.5),
+            ('backward', [-0.2, 0.0, 0.0], 1),
+            ('left', [0.0, 0.2, 0.0], 2),
+            ('right', [0.0, -0.2, 0.0], 10),
+            ('up', [0.0, 0.0, 0.2], 20),
+            ('down', [0.0, 0.0, -0.2], 50),
         ]
 
         # Perform translational motions
-        for motion_name, offset, N in motions:
+        for motion_name, offset, freq in motions:
             self.get_logger().info(f"Performing motion: {motion_name}")
-
+            total_time = 5.0  # Total time for the motion
+            N = total_time*freq  # Number of steps
             # Move to the offset position
             for i in range(N): # divid the target into N steps
                 offset_target = np.array(offset) / N * (i+1)
                 self.publish_pose(offset_target, self.center_orientation)
-                time.sleep(5.0/N)  # Wait for the arm to reach the position
+                time.sleep(1/freq) 
 
             # Move back to the center position
             self.publish_pose([0.0, 0.0, 0.0], self.center_orientation)
