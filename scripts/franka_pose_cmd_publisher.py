@@ -32,7 +32,7 @@ class PoseCommandPublisher(Node):
         for motion_name, offset, freq in motions:
             self.get_logger().info(f"Performing motion: {motion_name}")
             total_time = 5.0  # Total time for the motion
-            N = total_time*freq  # Number of steps
+            N = int(total_time*freq)  # Number of steps
             # Move to the offset position
             for i in range(N): # divid the target into N steps
                 offset_target = np.array(offset) / N * (i+1)
