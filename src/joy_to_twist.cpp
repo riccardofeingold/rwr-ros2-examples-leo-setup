@@ -18,7 +18,7 @@ class JoyToTwistNode : public rclcpp::Node {
   JoyToTwistNode()
       : Node("joy_to_twist"), debounce_counter_(0), enabled_(false) {
     // Initialize parameters
-    twist_topic_ = this->declare_parameter<std::string>("twist_topic", "/franka_twist_cmd");
+    twist_topic_ = this->declare_parameter<std::string>("twist_topic", "/franka/end_effector_twist_cmd");
     joy_topic_ = this->declare_parameter<std::string>("joy_topic", "/joy");
 
     // Create publishers
