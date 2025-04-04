@@ -12,20 +12,24 @@
 // ROS2 includes.
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
+#include "std_msgs/msg/float32_multi_array.hpp"
 #include "sensor_msgs/msg/joy.hpp"
+#include <chrono>
+
+#define VEL_SCALER 0.1
 
 class JoyToTwistNode : public rclcpp::Node {
  public:
   JoyToTwistNode()
       : Node("joy_to_twist"), debounce_counter_(0), enabled_(false) {
     // Initialize parameters
-    pos_cmd_topic_ = this->declare_parameter<std::string>("twist_topic", "/franka/end_effector_pose_cmd");
-    pose_topic_ = this->declare_parameter<std::string>("pose_topic", "/franka/end_effector_pose");
+    pos_cmd_topic_ = this->declare_parameter<std::string>("pos_cmd_topic", "/right/franka/end_effector_pose_cmd");
+    pose_topic_ = this->declare_parameter<std::string>("pose_topic", "/right/franka/end_effector_pose");
     joy_topic_ = this->declare_parameter<std::string>("joy_topic", "/joy");
 
     // Create publishers
     pos_cmd_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>(pos_cmd_topic_, 10);
-
+    grasp_pub_ = this->create_publisher<std_msgs::msg::Float32MultiArray>("/hand/right/policy_output", 10);
 
     // Create subscriber
     pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
@@ -41,13 +45,17 @@ class JoyToTwistNode : public rclcpp::Node {
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pos_cmd_pub_;
   rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_sub_;
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_sub_;
+  rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr grasp_pub_;
 
   std::string pos_cmd_topic_, robot_cmd_topic_, gripper_cmd_topic_, joy_topic_, pose_topic_;
   uint16_t debounce_counter_;
   bool enabled_;
+  bool initialized_ = false;
+  bool first_time = true;
   std::array<double, 3> position = {0, 0, 0};
   std::array<double, 4> orientation = {1, 0, 0, 0};
-  bool initialized_ = false;
+  double grasp_width_ = 1.0;
+  std::chrono::time_point<std::chrono::steady_clock> current_time_;
 
   void poseCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
   {
@@ -73,6 +81,14 @@ class JoyToTwistNode : public rclcpp::Node {
       return;
     }
 
+    std::chrono::duration<double> time_diff = std::chrono::steady_clock::now() - current_time_;
+    RCLCPP_INFO_STREAM(this->get_logger(), "COUNT: " << time_diff.count());
+    current_time_ =  std::chrono::steady_clock::now(); 
+    if(first_time)
+    {
+      first_time = false;
+      return;
+    } 
     // axes:
     const double &analogLeft_x{msg->axes[0]};
     const double &analogLeft_y{msg->axes[1]};
@@ -108,17 +124,10 @@ class JoyToTwistNode : public rclcpp::Node {
       RCLCPP_INFO(this->get_logger(), "{%s}: Joystick to Twist", (enabled_ ? "ENABLED" : "DISABLED"));
     }
 
-    if (buttonY)
-    {
-      position[2] += 0.01;
-      RCLCPP_INFO(this->get_logger(), "Received Joy input");
-    }
+    position[0] -= VEL_SCALER * analogLeft_x * time_diff.count();
+    position[1] += VEL_SCALER * analogLeft_y * time_diff.count();
+    position[2] += VEL_SCALER * analogRight_y * time_diff.count();
 
-    if (buttonA)
-    {
-      position[2] -= 0.01;
-    }
-    // Publish twist commands if enabled
     if (initialized_) {
       geometry_msgs::msg::PoseStamped pose_msg;
       pose_msg.pose.position.x = position[0];
@@ -130,6 +139,17 @@ class JoyToTwistNode : public rclcpp::Node {
       pose_msg.pose.orientation.y = orientation[2];
       pose_msg.pose.orientation.z = orientation[3];
 
+      std_msgs::msg::Float32MultiArray grasp_msg;
+      grasp_msg.data.resize(1);
+      if (buttonR1)
+        grasp_width_ += 0.01;
+      if (buttonL1)
+      {
+        grasp_width_ -= 0.01;
+      }
+
+      grasp_msg.data[0] = grasp_width_;
+      grasp_pub_->publish(grasp_msg);
       pos_cmd_pub_->publish(pose_msg);
     }
   }
