@@ -10,7 +10,7 @@ import time
 class PoseCommandPublisher(Node):
     def __init__(self):
         super().__init__('pose_command_publisher')
-        self.publisher_ = self.create_publisher(PoseStamped, '/franka/end_effector_pose_cmd', 10)
+        self.publisher_ = self.create_publisher(PoseStamped, '/right/franka/end_effector_pose_cmd', 10)
 
         # Define the center position and orientation
         self.center_position = Point(x=0.5, y=0.0, z=0.3)

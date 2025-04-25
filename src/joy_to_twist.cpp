@@ -43,6 +43,7 @@ class JoyToTwistNode : public rclcpp::Node {
  private:
   // Member variables for publishers, subscriber, and parameters.
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pos_cmd_pub_;
+  self.saving_done_publisher
   rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_sub_;
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_sub_;
   rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr grasp_pub_;
@@ -67,10 +68,10 @@ class JoyToTwistNode : public rclcpp::Node {
     position[1] = msg->pose.position.y;
     position[2] = msg->pose.position.z;
 
-    orientation[0] = msg->pose.orientation.w;
-    orientation[1] = msg->pose.orientation.x;
-    orientation[2] = msg->pose.orientation.y;
-    orientation[3] = msg->pose.orientation.z;
+    orientation[0] = 0.0;
+    orientation[1] = 1.0;
+    orientation[2] = 0.0;
+    orientation[3] = 0.0;
     RCLCPP_INFO(this->get_logger(), "INIT-------------------------------------");
     initialized_ = true;
   }
@@ -148,7 +149,7 @@ class JoyToTwistNode : public rclcpp::Node {
         grasp_width_ -= 0.01;
       }
 
-      grasp_msg.data[0] = grasp_width_;
+      grasp_msg.data[0] = -0.1;
       grasp_pub_->publish(grasp_msg);
       pos_cmd_pub_->publish(pose_msg);
     }
