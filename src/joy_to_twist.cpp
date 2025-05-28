@@ -148,7 +148,7 @@ class JoyToTwistNode : public rclcpp::Node {
         grasp_width_ -= 0.01;
       }
 
-      grasp_msg.data[0] = 0.0;
+      grasp_msg.data[0] = -0.1;
       grasp_pub_->publish(grasp_msg);
       pos_cmd_pub_->publish(pose_msg);
     }
